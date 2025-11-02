@@ -24,7 +24,7 @@ class MethodChannelFlutterSerialCommunication extends FlutterSerialCommunication
     }
 
     final cleanedString = availableDevices.replaceAll('=', ':');
-    final List<dynamic> rawDataList = jsonDecode(jsonEncode(cleanedString));
+    final List<dynamic> rawDataList = jsonDecode(cleanedString);
 
     List<DeviceInfo> deviceInfos = [];
     deviceInfos = rawDataList.map((e) => DeviceInfo.fromMap(e)).toList();
