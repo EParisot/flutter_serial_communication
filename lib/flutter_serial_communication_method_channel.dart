@@ -6,12 +6,10 @@ import 'package:flutter_serial_communication/models/device_info.dart';
 
 import 'flutter_serial_communication_platform_interface.dart';
 
-const eventChannelID =
-    'id.farellsujanto.flutter_serial_communication.flutter_event_channel';
+const eventChannelID = 'id.farellsujanto.flutter_serial_communication.flutter_event_channel';
 
 /// An implementation of [FlutterSerialCommunicationPlatform] that uses method channels.
-class MethodChannelFlutterSerialCommunication
-    extends FlutterSerialCommunicationPlatform {
+class MethodChannelFlutterSerialCommunication extends FlutterSerialCommunicationPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
   final methodChannel = const MethodChannel('flutter_serial_communication');
@@ -19,14 +17,13 @@ class MethodChannelFlutterSerialCommunication
   /// Get list of available [DeviceInfo]
   @override
   Future<List<DeviceInfo>> getAvailableDevices() async {
-    final availableDevices =
-        await methodChannel.invokeMethod<String?>('getAvailableDevices');
+    final availableDevices = await methodChannel.invokeMethod<String?>('getAvailableDevices');
 
     if (availableDevices == null || availableDevices == '[]') {
       return [];
     }
 
-    final cleanedString = availableDevices.replaceAll('=', ':');
+    final cleanedString = availableDevices.replaceAll('=', ':').trim();
     final List<dynamic> rawDataList = jsonDecode(cleanedString);
 
     List<DeviceInfo> deviceInfos = [];
@@ -42,13 +39,9 @@ class MethodChannelFlutterSerialCommunication
   /// returns [bool] to indicate whether the connection is success or not
   @override
   Future<bool> connect(DeviceInfo deviceInfo, int baudRate) async {
-    final connectionData = <String, dynamic>{
-      'name': deviceInfo.deviceName,
-      'baudRate': baudRate,
-    };
+    final connectionData = <String, dynamic>{'name': deviceInfo.deviceName, 'baudRate': baudRate};
 
-    final isConnected =
-        await methodChannel.invokeMethod<bool>('connect', connectionData);
+    final isConnected = await methodChannel.invokeMethod<bool>('connect', connectionData);
     return isConnected ?? false;
   }
 
@@ -68,16 +61,14 @@ class MethodChannelFlutterSerialCommunication
   /// Listen to message received from serial port
   @override
   EventChannel getSerialMessageListener() {
-    const EventChannel stream =
-        EventChannel('$eventChannelID/serialStreamChannel');
+    const EventChannel stream = EventChannel('$eventChannelID/serialStreamChannel');
     return stream;
   }
 
   /// Listen to device connection status
   @override
   EventChannel getDeviceConnectionListener() {
-    const EventChannel stream =
-        EventChannel('$eventChannelID/deviceConnectionStreamChannel');
+    const EventChannel stream = EventChannel('$eventChannelID/deviceConnectionStreamChannel');
     return stream;
   }
 
@@ -97,28 +88,24 @@ class MethodChannelFlutterSerialCommunication
 
   /// Set connection parameters
   @override
-  Future<bool> setParameters(
-      int baudRate, int dataBits, int stopBits, int parity) async {
+  Future<bool> setParameters(int baudRate, int dataBits, int stopBits, int parity) async {
     final connectionParams = <String, dynamic>{
       'baudRate': baudRate,
       'dataBits': dataBits,
       'stopBits': stopBits,
       'parity': parity,
     };
-    final isSent = await methodChannel.invokeMethod<bool>(
-        'setParameters', connectionParams);
+    final isSent = await methodChannel.invokeMethod<bool>('setParameters', connectionParams);
     return isSent ?? false;
   }
 
   @override
-  Future<bool> purgeHwBuffers(
-      bool purgeWriteBuffers, bool purgeReadBuffers) async {
+  Future<bool> purgeHwBuffers(bool purgeWriteBuffers, bool purgeReadBuffers) async {
     final commandParams = <String, dynamic>{
       'purgeWriteBuffers': purgeWriteBuffers,
       'purgeReadBuffers': purgeReadBuffers,
     };
-    final isSent =
-        await methodChannel.invokeMethod<bool>('purgeHwBuffers', commandParams);
+    final isSent = await methodChannel.invokeMethod<bool>('purgeHwBuffers', commandParams);
     return isSent ?? false;
   }
 }
