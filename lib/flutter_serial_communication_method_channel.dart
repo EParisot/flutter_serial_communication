@@ -23,7 +23,7 @@ class MethodChannelFlutterSerialCommunication extends FlutterSerialCommunication
       return [];
     }
 
-    final cleanedString = availableDevices.replaceAll('=', ':').replace("\\", "").trim();
+    final cleanedString = availableDevices.replaceAll('=', ':').replaceAll("\\", "").trim();
     final List<dynamic> rawDataList = jsonDecode(cleanedString);
 
     List<DeviceInfo> deviceInfos = [];
