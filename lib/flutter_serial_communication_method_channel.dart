@@ -26,7 +26,7 @@ class MethodChannelFlutterSerialCommunication
       return [];
     }
 
-    final cleanedString = availableDevices.replaceAll('=', ':');
+    final cleanedString = availableDevices.replaceAll('=', ':').replaceAll(RegExp(r'[^\x09\x0A\x0D\x20-\x7E]'), '');
     final List<dynamic> rawDataList = jsonDecode(cleanedString);
 
     List<DeviceInfo> deviceInfos = [];
