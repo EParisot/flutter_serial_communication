@@ -25,7 +25,7 @@ class MethodChannelFlutterSerialCommunication extends FlutterSerialCommunication
 
     final cleanedString = availableDevices
         .replaceAll('=', ':')
-        .replaceAll(RegExp(r'[^A-Za-z0-9().,;?]'), '');
+        .replaceAll(RegExp(r'[^\x09\x0A\x0D\x20-\x7E]'), '');
     final List<dynamic> rawDataList = jsonDecode(cleanedString);
 
     List<DeviceInfo> deviceInfos = [];
