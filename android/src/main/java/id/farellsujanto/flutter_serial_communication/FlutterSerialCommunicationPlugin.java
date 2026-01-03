@@ -312,7 +312,12 @@ public class FlutterSerialCommunicationPlugin implements FlutterPlugin, MethodCa
       usbSerialPort. getSupportedControlLines();
 
       UsbDeviceConnection usbConnection = usbManager.openDevice(driver.getDevice());
-      usbSerialPort.open(usbConnection);
+      if (usbConnection == null) {
+		Log.w("Serial", "usbManager.openDevice returned null");
+		handleConnectResult(false);
+		return;
+	  }
+	  usbSerialPort.open(usbConnection);
 
       usbSerialPort.setParameters(baudRate, UsbSerialPort.DATABITS_8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
       connected = true;
