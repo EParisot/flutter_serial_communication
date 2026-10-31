@@ -36,6 +36,7 @@ import io.flutter.plugin.common.MethodChannel.Result;
 /**
  * FlutterSerialCommunicationPlugin
  */
+
 public class FlutterSerialCommunicationPlugin implements FlutterPlugin, MethodCallHandler, ActivityAware, SerialInputOutputManager.Listener {
   private SerialMessageHandler serialMessageHandler = new SerialMessageHandler();
   private DeviceConnectionHandler deviceConnectionHandler = new DeviceConnectionHandler();
