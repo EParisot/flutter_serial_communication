@@ -164,55 +164,71 @@ public class FlutterSerialCommunicationPlugin implements FlutterPlugin, MethodCa
   }
 
   private boolean setRTS(boolean set) {
-    boolean success = false;
-    if(usbSerialPort != null) {
-      try {
-        usbSerialPort.setRTS(set);
-        success = true;
-      } catch (IOException exception) {
-        Log.e("Serial", "Failed to set RTS", exception);
-      }
+    if (!hasOpenPort("set RTS")) {
+      return false;
     }
-    return success;
+    try {
+      usbSerialPort.setRTS(set);
+      return true;
+    } catch (IOException | NullPointerException exception) {
+      handlePortFailure("Failed to set RTS", exception);
+      return false;
+    }
   }
 
   private boolean setDTR(boolean set) {
-    boolean success = false;
-    if(usbSerialPort != null) {
-      try {
-        usbSerialPort.setDTR(set);
-        success = true;
-      } catch (IOException exception) {
-        Log.e("Serial", "Failed to set DTR", exception);
-      }
+    if (!hasOpenPort("set DTR")) {
+      return false;
     }
-    return success;
+    try {
+      usbSerialPort.setDTR(set);
+      return true;
+    } catch (IOException | NullPointerException exception) {
+      handlePortFailure("Failed to set DTR", exception);
+      return false;
+    }
   }
 
   private boolean setParameters(int baudRate, int dataBits, int stopBits, int parity) {
-    boolean success = false;
-    if(usbSerialPort != null) {
-      try {
-        usbSerialPort.setParameters(baudRate, dataBits, stopBits, parity);
-        success = true;
-      } catch (IOException exception) {
-        Log.e("Serial", "Failed to set serial parameters", exception);
-      }
+    if (!hasOpenPort("set serial parameters")) {
+      return false;
     }
-    return success;
+    try {
+      usbSerialPort.setParameters(baudRate, dataBits, stopBits, parity);
+      return true;
+    } catch (IOException | NullPointerException exception) {
+      handlePortFailure("Failed to set serial parameters", exception);
+      return false;
+    }
   }
 
   private boolean purgeHwBuffers(boolean purgeWriteBuffers, boolean purgeReadBuffers) {
-    boolean success = false;
-    if(usbSerialPort != null) {
-      try {
-        usbSerialPort.purgeHwBuffers(purgeWriteBuffers, purgeReadBuffers);
-        success = true;
-      } catch (IOException exception) {
-        Log.e("Serial", "Failed to purge serial buffers", exception);
-      }
+    if (!hasOpenPort("purge serial buffers")) {
+      return false;
     }
-    return success;
+    try {
+      usbSerialPort.purgeHwBuffers(purgeWriteBuffers, purgeReadBuffers);
+      return true;
+    } catch (IOException | NullPointerException exception) {
+      handlePortFailure("Failed to purge serial buffers", exception);
+      return false;
+    }
+  }
+
+  private boolean hasOpenPort(String operation) {
+    if (connected && usbSerialPort != null && usbSerialPort.isOpen()) {
+      return true;
+    }
+    Log.w("Serial", "Cannot " + operation + " without an open USB serial port");
+    if (connected || usbSerialPort != null) {
+      disconnect();
+    }
+    return false;
+  }
+
+  private void handlePortFailure(String message, Exception exception) {
+    Log.e("Serial", message, exception);
+    disconnect();
   }
 
   @Override
@@ -275,18 +291,16 @@ public class FlutterSerialCommunicationPlugin implements FlutterPlugin, MethodCa
   }
 
   private boolean write(byte[] data) {
-    if (usbSerialPort == null) {
-      Log.e("Serial", "Cannot write without an open USB serial port");
+    if (!hasOpenPort("write")) {
       return false;
     }
     try {
       usbSerialPort.write(data, write_wait_millis);
       return true;
-    } catch (IOException e) {
-      Log.e("Error Sending", e.getMessage());
-      disconnect();
+    } catch (IOException | NullPointerException exception) {
+      handlePortFailure("Failed to write to USB serial port", exception);
+      return false;
     }
-    return false;
   }
 
   private void connect(String name, int baudRate) {
@@ -387,9 +401,8 @@ public class FlutterSerialCommunicationPlugin implements FlutterPlugin, MethodCa
 
       handleConnectResult(true);
       return;
-    } catch (IOException e) {
-      Log.e("Serial", "Failed to open USB serial port", e);
-      disconnect();
+    } catch (IOException | NullPointerException exception) {
+      handlePortFailure("Failed to open USB serial port", exception);
     }
 
     handleConnectResult(false);
@@ -405,16 +418,19 @@ public class FlutterSerialCommunicationPlugin implements FlutterPlugin, MethodCa
       handleConnectResult(false);
     }
     mainHandler.post(() -> deviceConnectionHandler.success(false));
+    SerialInputOutputManager ioManager = usbIoManager;
+    UsbSerialPort serialPort = usbSerialPort;
+    usbIoManager = null;
+    usbSerialPort = null;
     try {
-      if (usbIoManager != null) {
-        usbIoManager.setListener(null);
-        usbIoManager.stop();
+      if (ioManager != null) {
+        ioManager.setListener(null);
+        ioManager.stop();
       }
-      usbIoManager = null;
-      if(usbSerialPort != null && usbSerialPort.isOpen()) {
-       usbSerialPort.close();
+      if (serialPort != null && serialPort.isOpen()) {
+        serialPort.close();
       }
-    } catch (IOException exception) {
+    } catch (IOException | NullPointerException exception) {
       Log.e("Serial", "Failed to close USB serial port", exception);
     }
   }
